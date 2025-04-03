@@ -1,8 +1,7 @@
-package action
-
-import "github.com/ethereum/go-ethereum/common"
+package public
 
 import (
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
