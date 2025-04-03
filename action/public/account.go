@@ -12,7 +12,8 @@ import (
 )
 
 // GetBalance gets the balance of the specified address at a certain block, default blockTag is "latest"
-func (c *PublicClient) GetBalance(ctx context.Context, address common.Address, blockTag string) (*big.Int, error) {
+// method: getBalance
+func (c *Client) GetBalance(ctx context.Context, address common.Address, blockTag string) (*big.Int, error) {
 	if blockTag == "" {
 		blockTag = "latest"
 	}
@@ -30,7 +31,8 @@ func (c *PublicClient) GetBalance(ctx context.Context, address common.Address, b
 }
 
 // GetTransactionCount gets the transaction count of the specified address
-func (c *PublicClient) GetTransactionCount(ctx context.Context, address common.Address, blockTag string) (uint64, error) {
+// method: getTransactionCount
+func (c *Client) GetTransactionCount(ctx context.Context, address common.Address, blockTag string) (uint64, error) {
 	if blockTag == "" {
 		blockTag = "latest"
 	}
@@ -46,7 +48,8 @@ func (c *PublicClient) GetTransactionCount(ctx context.Context, address common.A
 }
 
 // CreateAccessList creates an access list for the specified address
-func (c *PublicClient) CreateAccessList(ctx context.Context, tx map[string]any) (types.AccessList, error) {
+// method: createAccessList
+func (c *Client) CreateAccessList(ctx context.Context, tx map[string]any) (types.AccessList, error) {
 	var result struct {
 		AccessList types.AccessList `json:"accessList"`
 	}

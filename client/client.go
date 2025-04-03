@@ -25,14 +25,14 @@ const (
 // Option config function type
 type Option func(*config) error
 
-// Client is a JSON-RPC client interface
-type Client interface {
+// Interface is a JSON-RPC Client interface
+type Interface interface {
 	Request(ctx context.Context, method string, params ...any) (json.RawMessage, error)
 }
 
-// client is a JSON-RPC client that supports fallback
-type client struct {
-	transports      []transport.Transport
+// Client is a JSON-RPC Client that supports fallback
+type Client struct {
+	transport       []transport.Transport
 	privateKey      *ecdsa.PrivateKey
 	from            common.Address
 	timeout         time.Duration
@@ -41,7 +41,7 @@ type client struct {
 }
 
 type config struct {
-	transports      []transport.Transport
+	transport       []transport.Transport
 	privateKey      *ecdsa.PrivateKey
 	from            common.Address
 	timeout         time.Duration
@@ -49,8 +49,8 @@ type config struct {
 	retryCount      int
 }
 
-// NewClient creates a client and applies all options
-func NewClient(opts ...Option) (*client, error) {
+// NewClient creates a Client and applies all options
+func NewClient(opts ...Option) (*Client, error) {
 	cfg := &config{
 		timeout:         defaultTimeout,
 		pollingInterval: defaultPollingInterval,
@@ -63,7 +63,7 @@ func NewClient(opts ...Option) (*client, error) {
 		}
 	}
 
-	if len(cfg.transports) == 0 {
+	if len(cfg.transport) == 0 {
 		return nil, errors.New("at least one transport required")
 	}
 	if cfg.timeout <= 0 {
@@ -73,8 +73,8 @@ func NewClient(opts ...Option) (*client, error) {
 		return nil, fmt.Errorf("retry count must be >= %d", minRetryCount)
 	}
 
-	return &client{
-		transports:      cfg.transports,
+	return &Client{
+		transport:       cfg.transport,
 		privateKey:      cfg.privateKey,
 		from:            cfg.from,
 		timeout:         cfg.timeout,
@@ -87,9 +87,9 @@ func NewClient(opts ...Option) (*client, error) {
 func WithTransport(t ...transport.Transport) Option {
 	return func(c *config) error {
 		if len(t) == 0 {
-			return errors.New("transports cannot be empty")
+			return errors.New("transport cannot be empty")
 		}
-		c.transports = t
+		c.transport = t
 		return nil
 	}
 }
@@ -141,7 +141,7 @@ func WithRetryCount(count int) Option {
 }
 
 // Request calls all Transports in sequence and returns the first successful result
-func (c *client) Request(ctx context.Context, method string, params ...any) (json.RawMessage, error) {
+func (c *Client) Request(ctx context.Context, method string, params ...any) (json.RawMessage, error) {
 	var (
 		res     json.RawMessage
 		lastErr error
@@ -155,7 +155,7 @@ func (c *client) Request(ctx context.Context, method string, params ...any) (jso
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			for _, t := range c.transports {
+			for _, t := range c.transport {
 				res, lastErr = t.Request(ctx, method, params...)
 				if lastErr == nil {
 					return res, nil
@@ -172,7 +172,7 @@ func (c *client) Request(ctx context.Context, method string, params ...any) (jso
 }
 
 // SendETH sends ETH
-func (c *client) SendETH(ctx context.Context, to common.Address, amount *big.Int, gasLimit uint64,
+func (c *Client) SendETH(ctx context.Context, to common.Address, amount *big.Int, gasLimit uint64,
 	maxFeePerGas *big.Int, maxPriorityFeePerGas *big.Int) (common.Hash, error) {
 	if c.privateKey == nil {
 		return common.Hash{}, fmt.Errorf("private key is required for wallet operations")
@@ -210,7 +210,7 @@ func (c *client) SendETH(ctx context.Context, to common.Address, amount *big.Int
 }
 
 // SendETH1559 sends an EIP-1559 transaction
-func (c *client) SendETH1559(ctx context.Context, to common.Address,
+func (c *Client) SendETH1559(ctx context.Context, to common.Address,
 	amount, maxFeePerGas, maxPriorityFeePerGas *big.Int, gasLimit uint64,
 	accessList types.AccessList) (common.Hash, error) {
 
@@ -245,7 +245,7 @@ func (c *client) SendETH1559(ctx context.Context, to common.Address,
 }
 
 // SignTypedData signs EIP-712 structured data
-func (c *client) SignTypedData(typedDataJSON string) ([]byte, error) {
+func (c *Client) SignTypedData(typedDataJSON string) ([]byte, error) {
 	if c.privateKey == nil {
 		return nil, errors.New("wallet not initialized")
 	}
@@ -257,7 +257,7 @@ func (c *client) SignTypedData(typedDataJSON string) ([]byte, error) {
 }
 
 // SignMessage signs a message
-func (c *client) SignMessage(msg []byte) ([]byte, error) {
+func (c *Client) SignMessage(msg []byte) ([]byte, error) {
 	if c.privateKey == nil {
 		return nil, errors.New("wallet not initialized")
 	}
@@ -268,7 +268,8 @@ func (c *client) SignMessage(msg []byte) ([]byte, error) {
 }
 
 // SimulateCall simulates an eth_call
-func (c *client) SimulateCall(ctx context.Context, call map[string]any, blockTag string) (string, error) {
+// method: call
+func (c *Client) SimulateCall(ctx context.Context, call map[string]any, blockTag string) (string, error) {
 	if blockTag == "" {
 		blockTag = "latest"
 	}
@@ -284,7 +285,8 @@ func (c *client) SimulateCall(ctx context.Context, call map[string]any, blockTag
 }
 
 // EstimateGas estimates the gas
-func (c *client) EstimateGas(ctx context.Context, call map[string]any) (uint64, error) {
+// method: estimateGas
+func (c *Client) EstimateGas(ctx context.Context, call map[string]any) (uint64, error) {
 	res, err := c.Request(ctx, "estimateGas", call)
 	if err != nil {
 		return 0, err
@@ -296,7 +298,7 @@ func (c *client) EstimateGas(ctx context.Context, call map[string]any) (uint64, 
 	return util.ParseHexUint64(hexGas)
 }
 
-func (c *client) getNonce(ctx context.Context) (uint64, error) {
+func (c *Client) getNonce(ctx context.Context) (uint64, error) {
 	res, err := c.Request(ctx, "getNonce", c.from.Hex(), "pending")
 	if err != nil {
 		return 0, err
@@ -308,7 +310,9 @@ func (c *client) getNonce(ctx context.Context) (uint64, error) {
 	return util.ParseHexUint64(hexNonce)
 }
 
-func (c *client) getChainID(ctx context.Context) (*big.Int, error) {
+// getChainID gets the chain ID
+// method: getChainId
+func (c *Client) getChainID(ctx context.Context) (*big.Int, error) {
 	res, err := c.Request(ctx, "getChainId")
 	if err != nil {
 		return nil, err
@@ -322,7 +326,9 @@ func (c *client) getChainID(ctx context.Context) (*big.Int, error) {
 	return id, nil
 }
 
-func (c *client) sendRawTransaction(ctx context.Context, tx *types.Transaction, out *common.Hash) error {
+// sendRawTransaction sends a raw transaction
+// method: sendRawTransaction
+func (c *Client) sendRawTransaction(ctx context.Context, tx *types.Transaction, out *common.Hash) error {
 	data, err := tx.MarshalBinary()
 	if err != nil {
 		return err

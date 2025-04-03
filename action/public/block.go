@@ -10,7 +10,8 @@ import (
 )
 
 // GetBlockByNumber get block information by block number
-func (c *PublicClient) GetBlockByNumber(ctx context.Context, blockNumber *big.Int, fullTx bool) (json.RawMessage, error) {
+// method: getBlockByNumber
+func (c *Client) GetBlockByNumber(ctx context.Context, blockNumber *big.Int, fullTx bool) (json.RawMessage, error) {
 	blockNumHex := fmt.Sprintf("0x%x", blockNumber)
 	res, err := c.client.Request(ctx, "getBlockByNumber", blockNumHex, fullTx)
 	if err != nil {
@@ -20,7 +21,8 @@ func (c *PublicClient) GetBlockByNumber(ctx context.Context, blockNumber *big.In
 }
 
 // GetBlockByHash get block information by block hash
-func (c *PublicClient) GetBlockByHash(ctx context.Context, blockHash common.Hash, fullTx bool) (json.RawMessage, error) {
+// method: getBlockByHash
+func (c *Client) GetBlockByHash(ctx context.Context, blockHash common.Hash, fullTx bool) (json.RawMessage, error) {
 	res, err := c.client.Request(ctx, "getBlockByHash", blockHash.Hex(), fullTx)
 	if err != nil {
 		return nil, err
@@ -29,7 +31,8 @@ func (c *PublicClient) GetBlockByHash(ctx context.Context, blockHash common.Hash
 }
 
 // GetBlockTransactionCountByNumber get transaction count by block number
-func (c *PublicClient) GetBlockTransactionCountByNumber(ctx context.Context, blockNumber *big.Int) (uint64, error) {
+// method: getBlockTransactionCountByNumber
+func (c *Client) GetBlockTransactionCountByNumber(ctx context.Context, blockNumber *big.Int) (uint64, error) {
 	blockNumHex := fmt.Sprintf("0x%x", blockNumber)
 	res, err := c.client.Request(ctx, "getBlockTransactionCountByNumber", blockNumHex)
 	if err != nil {
@@ -43,7 +46,8 @@ func (c *PublicClient) GetBlockTransactionCountByNumber(ctx context.Context, blo
 }
 
 // GetBlockTransactionCountByHash get transaction count by block hash
-func (c *PublicClient) GetBlockTransactionCountByHash(ctx context.Context, blockHash common.Hash) (uint64, error) {
+// method: getBlockTransactionCountByHash
+func (c *Client) GetBlockTransactionCountByHash(ctx context.Context, blockHash common.Hash) (uint64, error) {
 	res, err := c.client.Request(ctx, "getBlockTransactionCountByHash", blockHash.Hex())
 	if err != nil {
 		return 0, err
@@ -56,7 +60,8 @@ func (c *PublicClient) GetBlockTransactionCountByHash(ctx context.Context, block
 }
 
 // SimulateBlocks simulate blocks
-func (c *PublicClient) SimulateBlocks(ctx context.Context, blockCount int) (json.RawMessage, error) {
+// method: simulateBlocks
+func (c *Client) SimulateBlocks(ctx context.Context, blockCount int) (json.RawMessage, error) {
 	res, err := c.client.Request(ctx, "simulateBlocks", blockCount)
 	if err != nil {
 		return nil, err
@@ -65,7 +70,8 @@ func (c *PublicClient) SimulateBlocks(ctx context.Context, blockCount int) (json
 }
 
 // WatchBlockNumber watch block number
-func (c *PublicClient) WatchBlockNumber(ctx context.Context) (json.RawMessage, error) {
+// method: watchBlockNumber
+func (c *Client) WatchBlockNumber(ctx context.Context) (json.RawMessage, error) {
 	res, err := c.client.Request(ctx, "watchBlockNumber")
 	if err != nil {
 		return nil, err
@@ -74,7 +80,8 @@ func (c *PublicClient) WatchBlockNumber(ctx context.Context) (json.RawMessage, e
 }
 
 // WatchBlocks watch blocks
-func (c *PublicClient) WatchBlocks(ctx context.Context, blockCount int) (json.RawMessage, error) {
+// method: watchBlocks
+func (c *Client) WatchBlocks(ctx context.Context, blockCount int) (json.RawMessage, error) {
 	res, err := c.client.Request(ctx, "watchBlocks", blockCount)
 	if err != nil {
 		return nil, err

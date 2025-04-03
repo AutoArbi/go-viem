@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-var _ client.Client = (*mockClient)(nil)
+var _ client.Interface = (*mockClient)(nil)
 
 func TestGetBlockByNumber(t *testing.T) {
 	expectedBlockNumber := big.NewInt(100)
@@ -35,7 +35,7 @@ func TestGetBlockByNumber(t *testing.T) {
 			return json.RawMessage("{\"block\": \"data\"}"), nil
 		},
 	}
-	pc := &PublicClient{client: mock}
+	pc := &Client{client: mock}
 	res, err := pc.GetBlockByNumber(context.Background(), expectedBlockNumber, true)
 	if err != nil {
 		t.Fatalf("GetBlockByNumber error: %v", err)
@@ -70,7 +70,7 @@ func TestGetBlockByHash(t *testing.T) {
 			return json.RawMessage("{\"block\": \"hash data\"}"), nil
 		},
 	}
-	pc := &PublicClient{client: mock}
+	pc := &Client{client: mock}
 	res, err := pc.GetBlockByHash(context.Background(), expectedBlockHash, fullTx)
 	if err != nil {
 		t.Fatalf("GetBlockByHash error: %v", err)
@@ -101,7 +101,7 @@ func TestGetBlockTransactionCountByNumber(t *testing.T) {
 			return json.RawMessage("\"0x5\""), nil
 		},
 	}
-	pc := &PublicClient{client: mock}
+	pc := &Client{client: mock}
 	count, err := pc.GetBlockTransactionCountByNumber(context.Background(), expectedBlockNumber)
 	if err != nil {
 		t.Fatalf("GetBlockTransactionCountByNumber error: %v", err)
@@ -127,7 +127,7 @@ func TestGetBlockTransactionCountByHash(t *testing.T) {
 			return json.RawMessage("\"0x3\""), nil
 		},
 	}
-	pc := &PublicClient{client: mock}
+	pc := &Client{client: mock}
 	count, err := pc.GetBlockTransactionCountByHash(context.Background(), expectedBlockHash)
 	if err != nil {
 		t.Fatalf("GetBlockTransactionCountByHash error: %v", err)
@@ -153,7 +153,7 @@ func TestSimulateBlocks(t *testing.T) {
 			return json.RawMessage("{\"simulated\": true}"), nil
 		},
 	}
-	pc := &PublicClient{client: mock}
+	pc := &Client{client: mock}
 	res, err := pc.SimulateBlocks(context.Background(), blockCount)
 	if err != nil {
 		t.Fatalf("SimulateBlocks error: %v", err)
@@ -176,7 +176,7 @@ func TestWatchBlockNumber(t *testing.T) {
 			return json.RawMessage("{\"watch\": \"blockNumber\"}"), nil
 		},
 	}
-	pc := &PublicClient{client: mock}
+	pc := &Client{client: mock}
 	res, err := pc.WatchBlockNumber(context.Background())
 	if err != nil {
 		t.Fatalf("WatchBlockNumber error: %v", err)
@@ -206,7 +206,7 @@ func TestWatchBlocks(t *testing.T) {
 			return json.RawMessage("{\"watch\": \"blocks\"}"), nil
 		},
 	}
-	pc := &PublicClient{client: mock}
+	pc := &Client{client: mock}
 	res, err := pc.WatchBlocks(context.Background(), blockCount)
 	if err != nil {
 		t.Fatalf("WatchBlocks error: %v", err)
