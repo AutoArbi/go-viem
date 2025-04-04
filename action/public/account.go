@@ -17,7 +17,7 @@ func (c *Client) GetBalance(ctx context.Context, address common.Address, blockTa
 	if blockTag == "" {
 		blockTag = "latest"
 	}
-	res, err := c.client.Request(ctx, "getBalance", address.Hex(), blockTag)
+	res, err := c.Client.Request(ctx, "getBalance", address.Hex(), blockTag)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (c *Client) GetTransactionCount(ctx context.Context, address common.Address
 	if blockTag == "" {
 		blockTag = "latest"
 	}
-	res, err := c.client.Request(ctx, "getTransactionCount", address.Hex(), blockTag)
+	res, err := c.Client.Request(ctx, "getTransactionCount", address.Hex(), blockTag)
 	if err != nil {
 		return 0, err
 	}
@@ -53,7 +53,7 @@ func (c *Client) CreateAccessList(ctx context.Context, tx map[string]any) (types
 	var result struct {
 		AccessList types.AccessList `json:"accessList"`
 	}
-	res, err := c.client.Request(ctx, "createAccessList", tx)
+	res, err := c.Client.Request(ctx, "createAccessList", tx)
 	if err != nil {
 		return nil, err
 	}

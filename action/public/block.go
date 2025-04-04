@@ -13,7 +13,7 @@ import (
 // method: getBlockByNumber
 func (c *Client) GetBlockByNumber(ctx context.Context, blockNumber *big.Int, fullTx bool) (json.RawMessage, error) {
 	blockNumHex := fmt.Sprintf("0x%x", blockNumber)
-	res, err := c.client.Request(ctx, "getBlockByNumber", blockNumHex, fullTx)
+	res, err := c.Client.Request(ctx, "getBlockByNumber", blockNumHex, fullTx)
 	if err != nil {
 		return nil, err
 	}
@@ -23,7 +23,7 @@ func (c *Client) GetBlockByNumber(ctx context.Context, blockNumber *big.Int, ful
 // GetBlockByHash get block information by block hash
 // method: getBlockByHash
 func (c *Client) GetBlockByHash(ctx context.Context, blockHash common.Hash, fullTx bool) (json.RawMessage, error) {
-	res, err := c.client.Request(ctx, "getBlockByHash", blockHash.Hex(), fullTx)
+	res, err := c.Client.Request(ctx, "getBlockByHash", blockHash.Hex(), fullTx)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func (c *Client) GetBlockByHash(ctx context.Context, blockHash common.Hash, full
 // method: getBlockTransactionCountByNumber
 func (c *Client) GetBlockTransactionCountByNumber(ctx context.Context, blockNumber *big.Int) (uint64, error) {
 	blockNumHex := fmt.Sprintf("0x%x", blockNumber)
-	res, err := c.client.Request(ctx, "getBlockTransactionCountByNumber", blockNumHex)
+	res, err := c.Client.Request(ctx, "getBlockTransactionCountByNumber", blockNumHex)
 	if err != nil {
 		return 0, err
 	}
@@ -48,7 +48,7 @@ func (c *Client) GetBlockTransactionCountByNumber(ctx context.Context, blockNumb
 // GetBlockTransactionCountByHash get transaction count by block hash
 // method: getBlockTransactionCountByHash
 func (c *Client) GetBlockTransactionCountByHash(ctx context.Context, blockHash common.Hash) (uint64, error) {
-	res, err := c.client.Request(ctx, "getBlockTransactionCountByHash", blockHash.Hex())
+	res, err := c.Client.Request(ctx, "getBlockTransactionCountByHash", blockHash.Hex())
 	if err != nil {
 		return 0, err
 	}
@@ -62,7 +62,7 @@ func (c *Client) GetBlockTransactionCountByHash(ctx context.Context, blockHash c
 // SimulateBlocks simulate blocks
 // method: simulateBlocks
 func (c *Client) SimulateBlocks(ctx context.Context, blockCount int) (json.RawMessage, error) {
-	res, err := c.client.Request(ctx, "simulateBlocks", blockCount)
+	res, err := c.Client.Request(ctx, "simulateBlocks", blockCount)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (c *Client) SimulateBlocks(ctx context.Context, blockCount int) (json.RawMe
 // WatchBlockNumber watch block number
 // method: watchBlockNumber
 func (c *Client) WatchBlockNumber(ctx context.Context) (json.RawMessage, error) {
-	res, err := c.client.Request(ctx, "watchBlockNumber")
+	res, err := c.Client.Request(ctx, "watchBlockNumber")
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func (c *Client) WatchBlockNumber(ctx context.Context) (json.RawMessage, error) 
 // WatchBlocks watch blocks
 // method: watchBlocks
 func (c *Client) WatchBlocks(ctx context.Context, blockCount int) (json.RawMessage, error) {
-	res, err := c.client.Request(ctx, "watchBlocks", blockCount)
+	res, err := c.Client.Request(ctx, "watchBlocks", blockCount)
 	if err != nil {
 		return nil, err
 	}

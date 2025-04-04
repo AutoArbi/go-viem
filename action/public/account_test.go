@@ -21,7 +21,7 @@ func TestGetBalance(t *testing.T) {
 			return nil, errors.New("unexpected method: " + method)
 		},
 	}
-	pc := &Client{client: mock}
+	pc := &Client{Client: mock}
 
 	balance, err := pc.GetBalance(context.Background(), common.HexToAddress("0x123"), "latest")
 	if err != nil {
@@ -45,7 +45,7 @@ func TestGetTransactionCount(t *testing.T) {
 			return nil, errors.New("unexpected method: " + method)
 		},
 	}
-	pc := &Client{client: mock}
+	pc := &Client{Client: mock}
 
 	nonce, err := pc.GetTransactionCount(context.Background(), common.HexToAddress("0x123"), "pending")
 	if err != nil {
@@ -66,7 +66,7 @@ func TestCreateAccessList(t *testing.T) {
 			return nil, errors.New("unexpected method: " + method)
 		},
 	}
-	pc := &Client{client: mock}
+	pc := &Client{Client: mock}
 
 	txParams := map[string]any{
 		"from": "0x123",
