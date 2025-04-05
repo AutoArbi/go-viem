@@ -1,4 +1,4 @@
-package public
+package eth
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-var _ client.Interface = (*mockClient)(nil)
+var _ client.Transport = (*mockClient)(nil)
 
 func TestGetBlockByNumber(t *testing.T) {
 	expectedBlockNumber := big.NewInt(100)

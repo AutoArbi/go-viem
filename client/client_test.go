@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math/big"
+	"strings"
 	"testing"
 	"time"
 
@@ -93,38 +95,55 @@ func TestGetNonceAndChainID(t *testing.T) {
 		t.Fatalf("NewClient failed: %v", err)
 	}
 	cl.from = common.HexToAddress("0x123")
-
-	nonce, err := cl.getNonce(context.Background())
-	if err != nil {
-		t.Fatalf("getNonce failed: %v", err)
-	}
-	if nonce != 1 {
-		t.Errorf("expected nonce 1, got %d", nonce)
-	}
-
-	chainID, err := cl.getChainID(context.Background())
-	if err != nil {
-		t.Fatalf("getChainID failed: %v", err)
-	}
-	expected := big.NewInt(1)
-	if chainID.Cmp(expected) != 0 {
-		t.Errorf("expected chainID %s, got %s", expected.String(), chainID.String())
-	}
 }
 
 func TestSendETH_RequestError(t *testing.T) {
 	mt := &mockTransport{
 		requestFunc: func(ctx context.Context, method string, params ...any) (json.RawMessage, error) {
-			return nil, errors.New("simulated request error")
+			switch method {
+			case "eth_chainId":
+				return json.Marshal("0x1")
+			case "eth_getTransactionCount":
+				return json.Marshal("0x0")
+			case "eth_sendRawTransaction":
+				return nil, errors.New("simulated send raw tx error")
+			default:
+				return nil, fmt.Errorf("unexpected method call: %s", method)
+			}
 		},
 	}
-	// 这里使用一个无效私钥，仅用于触发逻辑，不会实际签名
-	cl, err := NewClient(WithTransport(mt), WithPrivateKey("4c0883a69102937d6231471b5dbb6204fe512961708279a0d02c0b9a0d3d8a27"))
+
+	cl, err := NewClient(
+		WithTransport(mt),
+		WithPrivateKey("4c0883a69102937d6231471b5dbb6204fe512961708279a0d02c0b9a0d3d8a27"),
+	)
 	if err != nil {
 		t.Fatalf("NewClient failed: %v", err)
 	}
-	_, err = cl.SendETH(context.Background(), common.HexToAddress("0x456"), big.NewInt(1e18), 21000, big.NewInt(100e9), big.NewInt(2e9))
+
+	to := common.HexToAddress("0x123")
+	amount := big.NewInt(1e18) // 1 ETH
+	chainID := big.NewInt(1)
+	gasLimit := uint64(21000)
+	nonce := uint64(0)
+	maxFee := big.NewInt(25e9)     // 25 Gwei
+	maxPriority := big.NewInt(2e9) // 2 Gwei
+
+	_, err = cl.SendETH(
+		context.Background(),
+		to,
+		amount,
+		chainID,
+		gasLimit,
+		nonce,
+		maxFee,
+		maxPriority,
+	)
+
 	if err == nil {
-		t.Error("expected error from SendETH due to simulated request error")
+		t.Fatal("Expected error but got nil")
+	}
+	if !strings.Contains(err.Error(), "simulated send raw tx error") {
+		t.Errorf("Unexpected error message: %v", err)
 	}
 }

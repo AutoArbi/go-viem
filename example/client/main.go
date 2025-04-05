@@ -7,11 +7,10 @@ import (
 	"time"
 
 	"github.com/AutoArbi/go-viem/client"
-	"github.com/AutoArbi/go-viem/transport"
 )
 
 func main() {
-	httpTransport, err := transport.NewWebSocketTransport("wss://example.com/rpc")
+	httpTransport, err := client.NewWebSocketTransport("wss://example.com/rpc")
 	if err != nil {
 		log.Fatalf("Failed to create WebScoket transport: %v", err)
 	}

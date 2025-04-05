@@ -6,10 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/AutoArbi/go-viem/transport"
 	"github.com/AutoArbi/go-viem/util"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
+	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"math/big"
 	"time"
@@ -25,14 +24,14 @@ const (
 // Option config function type
 type Option func(*config) error
 
-// Interface is a JSON-RPC Client interface
-type Interface interface {
+// Transport is a JSON-RPC Client interface
+type Transport interface {
 	Request(ctx context.Context, method string, params ...any) (json.RawMessage, error)
 }
 
 // Client is a JSON-RPC Client that supports fallback
 type Client struct {
-	transport       []transport.Transport
+	transport       []Transport
 	privateKey      *ecdsa.PrivateKey
 	from            common.Address
 	timeout         time.Duration
@@ -41,7 +40,7 @@ type Client struct {
 }
 
 type config struct {
-	transport       []transport.Transport
+	transport       []Transport
 	privateKey      *ecdsa.PrivateKey
 	from            common.Address
 	timeout         time.Duration
@@ -84,7 +83,7 @@ func NewClient(opts ...Option) (*Client, error) {
 }
 
 // WithTransport adds Transport
-func WithTransport(t ...transport.Transport) Option {
+func WithTransport(t ...Transport) Option {
 	return func(c *config) error {
 		if len(t) == 0 {
 			return errors.New("transport cannot be empty")
@@ -172,23 +171,12 @@ func (c *Client) Request(ctx context.Context, method string, params ...any) (jso
 }
 
 // SendETH sends ETH
-func (c *Client) SendETH(ctx context.Context, to common.Address, amount *big.Int, gasLimit uint64,
-	maxFeePerGas *big.Int, maxPriorityFeePerGas *big.Int) (common.Hash, error) {
+func (c *Client) SendETH(ctx context.Context, to common.Address, amount, chainID *big.Int, gasLimit, nonce uint64, maxFeePerGas, maxPriorityFeePerGas *big.Int) (common.Hash, error) {
 	if c.privateKey == nil {
 		return common.Hash{}, fmt.Errorf("private key is required for wallet operations")
 	}
 
-	nonce, err := c.getNonce(ctx)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	chainID, err := c.getChainID(ctx)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	tx := &types.DynamicFeeTx{
+	tx := &ethTypes.DynamicFeeTx{
 		ChainID:   chainID,
 		Nonce:     nonce,
 		To:        &to,
@@ -199,48 +187,13 @@ func (c *Client) SendETH(ctx context.Context, to common.Address, amount *big.Int
 		Data:      nil, // Optional: fill in ABI-encoded contract call
 	}
 
-	signedTx, err := types.SignNewTx(c.privateKey, types.NewLondonSigner(chainID), tx)
+	signedTx, err := ethTypes.SignNewTx(c.privateKey, ethTypes.NewLondonSigner(chainID), tx)
 	if err != nil {
 		return common.Hash{}, err
 	}
 
 	var txHash common.Hash
-	err = c.sendRawTransaction(ctx, signedTx, &txHash)
-	return txHash, err
-}
-
-// SendETH1559 sends an EIP-1559 transaction
-func (c *Client) SendETH1559(ctx context.Context, to common.Address,
-	amount, maxFeePerGas, maxPriorityFeePerGas *big.Int, gasLimit uint64,
-	accessList types.AccessList) (common.Hash, error) {
-
-	if c.privateKey == nil {
-		return common.Hash{}, fmt.Errorf("private key is required for wallet operations")
-	}
-	nonce, err := c.getNonce(ctx)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	chainID, err := c.getChainID(ctx)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	tx := &types.DynamicFeeTx{
-		ChainID:    chainID,
-		Nonce:      nonce,
-		To:         &to,
-		Value:      amount,
-		GasTipCap:  maxPriorityFeePerGas,
-		GasFeeCap:  maxFeePerGas,
-		Gas:        gasLimit,
-		AccessList: accessList,
-	}
-	signedTx, err := types.SignNewTx(c.privateKey, types.NewLondonSigner(chainID), tx)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	var txHash common.Hash
-	err = c.sendRawTransaction(ctx, signedTx, &txHash)
+	err = c.SendRawTransaction(ctx, signedTx, &txHash)
 	return txHash, err
 }
 
@@ -267,73 +220,41 @@ func (c *Client) SignMessage(msg []byte) ([]byte, error) {
 	return crypto.Sign(msgHash.Bytes(), c.privateKey)
 }
 
-// SimulateCall simulates an eth_call
-// method: call
-func (c *Client) SimulateCall(ctx context.Context, call map[string]any, blockTag string) (string, error) {
-	if blockTag == "" {
-		blockTag = "latest"
+// SendETH1559 sends an EIP-1559 transaction
+func (c *Client) SendETH1559(ctx context.Context, to common.Address,
+	amount, maxFeePerGas, maxPriorityFeePerGas, chainID *big.Int, gasLimit, nonce uint64,
+	accessList ethTypes.AccessList) (common.Hash, error) {
+
+	if c.privateKey == nil {
+		return common.Hash{}, fmt.Errorf("private key is required for wallet operations")
 	}
-	res, err := c.Request(ctx, "simulateCall", call, blockTag)
+	tx := &ethTypes.DynamicFeeTx{
+		ChainID:    chainID,
+		Nonce:      nonce,
+		To:         &to,
+		Value:      amount,
+		GasTipCap:  maxPriorityFeePerGas,
+		GasFeeCap:  maxFeePerGas,
+		Gas:        gasLimit,
+		AccessList: accessList,
+	}
+	signedTx, err := ethTypes.SignNewTx(c.privateKey, ethTypes.NewLondonSigner(chainID), tx)
 	if err != nil {
-		return "", err
+		return common.Hash{}, err
 	}
-	var hexResult string
-	if err := json.Unmarshal(res, &hexResult); err != nil {
-		return "", err
-	}
-	return hexResult, nil
+	var txHash common.Hash
+	err = c.SendRawTransaction(ctx, signedTx, &txHash)
+	return txHash, err
 }
 
-// EstimateGas estimates the gas
-// method: estimateGas
-func (c *Client) EstimateGas(ctx context.Context, call map[string]any) (uint64, error) {
-	res, err := c.Request(ctx, "estimateGas", call)
-	if err != nil {
-		return 0, err
-	}
-	var hexGas string
-	if err := json.Unmarshal(res, &hexGas); err != nil {
-		return 0, err
-	}
-	return util.ParseHexUint64(hexGas)
-}
-
-func (c *Client) getNonce(ctx context.Context) (uint64, error) {
-	res, err := c.Request(ctx, "getNonce", c.from.Hex(), "pending")
-	if err != nil {
-		return 0, err
-	}
-	var hexNonce string
-	if err := json.Unmarshal(res, &hexNonce); err != nil {
-		return 0, err
-	}
-	return util.ParseHexUint64(hexNonce)
-}
-
-// getChainID gets the chain ID
-// method: getChainId
-func (c *Client) getChainID(ctx context.Context) (*big.Int, error) {
-	res, err := c.Request(ctx, "getChainId")
-	if err != nil {
-		return nil, err
-	}
-	var hexID string
-	if err := json.Unmarshal(res, &hexID); err != nil {
-		return nil, err
-	}
-	id := new(big.Int)
-	id.SetString(hexID[2:], 16)
-	return id, nil
-}
-
-// sendRawTransaction sends a raw transaction
-// method: sendRawTransaction
-func (c *Client) sendRawTransaction(ctx context.Context, tx *types.Transaction, out *common.Hash) error {
+// SendRawTransaction sends a raw transaction
+// method: eth_sendRawTransaction
+func (c *Client) SendRawTransaction(ctx context.Context, tx *ethTypes.Transaction, out *common.Hash) error {
 	data, err := tx.MarshalBinary()
 	if err != nil {
 		return err
 	}
-	res, err := c.Request(ctx, "sendRawTransaction", fmt.Sprintf("0x%x", data))
+	res, err := c.Request(ctx, "eth_sendRawTransaction", fmt.Sprintf("0x%x", data))
 	if err != nil {
 		return err
 	}

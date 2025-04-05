@@ -1,8 +1,8 @@
-package public
+package eth
 
 import "github.com/AutoArbi/go-viem/client"
 
 // Client is a Client for public Ethereum RPC methods
 type Client struct {
-	Client client.Interface
+	Client client.Transport
 }

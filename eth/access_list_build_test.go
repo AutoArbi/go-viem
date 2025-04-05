@@ -1,4 +1,4 @@
-package public
+package eth
 
 import (
 	"testing"
