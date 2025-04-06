@@ -16,7 +16,7 @@ func (c *Client) GetBalance(ctx context.Context, address common.Address, blockTa
 	if blockTag == "" {
 		blockTag = types.LATEST
 	}
-	res, err := c.Client.Request(ctx, "eth_getBalance", address.Hex(), blockTag)
+	res, err := c.Client.Request(ctx, types.GetBalance, address.Hex(), blockTag)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func (c *Client) GetTransactionCount(ctx context.Context, address common.Address
 	if blockTag == "" {
 		blockTag = types.LATEST
 	}
-	res, err := c.Client.Request(ctx, "eth_getTransactionCount", address.Hex(), blockTag)
+	res, err := c.Client.Request(ctx, types.GetTransactionCount, address.Hex(), blockTag)
 	if err != nil {
 		return 0, err
 	}
@@ -48,7 +48,7 @@ func (c *Client) CreateAccessList(ctx context.Context, tx map[string]any) (ethTy
 		GasUsed    string              `json:"gasUsed"`
 	}
 
-	res, err := c.Client.Request(ctx, "eth_createAccessList", tx)
+	res, err := c.Client.Request(ctx, types.CreateAccessList, tx)
 	if err != nil {
 		return nil, err
 	}

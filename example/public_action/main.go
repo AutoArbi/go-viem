@@ -3,18 +3,18 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/AutoArbi/go-viem/eth"
+	log2 "github.com/ethereum/go-ethereum/log"
 	"log"
 	"time"
 
-	"github.com/AutoArbi/go-viem/action/public"
 	"github.com/AutoArbi/go-viem/client"
-	"github.com/AutoArbi/go-viem/transport"
 	"github.com/ethereum/go-ethereum/common"
 )
 
 func main() {
 	// 创建 WebSocket 传输
-	wsTransport, err := transport.NewWebSocketTransport("wss://example.com/rpc")
+	wsTransport, err := client.NewWebSocketTransport("wss://eth-mainnet.g.alchemy.com/v2/LE5jeRzEtZ890kR9v9wG4TXQ6itwoDZu")
 	if err != nil {
 		log.Fatalf("Failed to create WebSocket transport: %v", err)
 	}
@@ -26,14 +26,36 @@ func main() {
 	}
 
 	// 创建公共客户端
-	publicClient := &public.Client{Client: cli}
+	publicClient := &eth.Client{Client: cli}
 
 	// 设置上下文和超时
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
+	// eth_blockNumber
+	blockNumber, err := publicClient.GetBlockNumber(ctx)
+	if err != nil {
+		log.Fatalf("Failed to get block number: %v", err)
+	}
+	fmt.Printf("Block Number: %s\n", blockNumber)
+
+	blockByNumber, err := publicClient.GetBlockByNumber(ctx, blockNumber, true)
+	if err != nil {
+		log.Fatalf("Failed to get block by number: %v", err)
+	}
+	fmt.Printf("Block By Number: %s\n", blockByNumber)
+
+	log2.Trace("Block By Number", blockByNumber)
+
+	// eth_getChainId
+	chainId, err := publicClient.GetChainID(ctx)
+	if err != nil {
+		log.Fatalf("Failed to get chain ID: %v", err)
+	}
+	fmt.Printf("Chain ID: %s\n", chainId.String())
+
 	// 获取账户余额
-	address := common.HexToAddress("0xYourEthereumAddress")
+	address := common.HexToAddress("0x7031576A278AfFcdEcf0d6E9673E51261C0BFFF8")
 	balance, err := publicClient.GetBalance(ctx, address, "latest")
 	if err != nil {
 		log.Fatalf("Failed to get balance: %v", err)

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/AutoArbi/go-viem/types"
 	"github.com/AutoArbi/go-viem/util"
 	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
@@ -26,7 +27,7 @@ type Option func(*config) error
 
 // Transport is a JSON-RPC Client interface
 type Transport interface {
-	Request(ctx context.Context, method string, params ...any) (json.RawMessage, error)
+	Request(ctx context.Context, method types.RPCMethod, params ...any) (json.RawMessage, error)
 }
 
 // Client is a JSON-RPC Client that supports fallback
@@ -140,7 +141,7 @@ func WithRetryCount(count int) Option {
 }
 
 // Request calls all Transports in sequence and returns the first successful result
-func (c *Client) Request(ctx context.Context, method string, params ...any) (json.RawMessage, error) {
+func (c *Client) Request(ctx context.Context, method types.RPCMethod, params ...any) (json.RawMessage, error) {
 	var (
 		res     json.RawMessage
 		lastErr error
@@ -254,7 +255,7 @@ func (c *Client) SendRawTransaction(ctx context.Context, tx *ethTypes.Transactio
 	if err != nil {
 		return err
 	}
-	res, err := c.Request(ctx, "eth_sendRawTransaction", fmt.Sprintf("0x%x", data))
+	res, err := c.Request(ctx, types.SendRawTransaction, fmt.Sprintf("0x%x", data))
 	if err != nil {
 		return err
 	}

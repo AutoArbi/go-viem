@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"github.com/AutoArbi/go-viem/types"
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
@@ -25,8 +26,8 @@ func NewHTTPTransport(endpoint string) (*HTTPTransport, error) {
 }
 
 // Request implements the Transport interface's Request method
-func (t *HTTPTransport) Request(ctx context.Context, method string, params ...any) (json.RawMessage, error) {
+func (t *HTTPTransport) Request(ctx context.Context, method types.RPCMethod, params ...any) (json.RawMessage, error) {
 	var result json.RawMessage
-	err := t.client.CallContext(ctx, &result, method, params...)
+	err := t.client.CallContext(ctx, &result, string(method), params...)
 	return result, err
 }
